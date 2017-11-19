@@ -35,13 +35,26 @@
 # Revision $Id$
 
 ## Simple talker demo that listens to std_msgs/Strings published 
-## to the 'chatter' topic
+## to the 'commands' topic
 
-import rospy
+import rospy, time
+import RPi.GPIO as GPIO
 from std_msgs.msg import String
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(18,GPIO.OUT)
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
+    if data.data == "fwd":
+        GPIO.output(18,GPIO.HIGH)
+    if data.data == "back"
+        GPIO.output(18,GPIO.LOW)
+
+
+    #parse(data.data)
+    #execute(commands)
 
 def listener():
 
@@ -51,7 +64,7 @@ def listener():
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
     rospy.init_node('get_comm', anonymous=True)
-    rospy.Subscriber('chatter', String, callback)
+    rospy.Subscriber('commands', String, callback)
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 

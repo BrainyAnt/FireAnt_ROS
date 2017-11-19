@@ -35,32 +35,36 @@
 # Revision $Id$
 
 ## Simple talker demo that published std_msgs/Strings messages
-## to the 'chatter' topic
+## to the 'commands' topic
 
 import rospy
 import sys, tty, termios
 from std_msgs.msg import String
 
 def send_comm():
-    pub = rospy.Publisher('chatter', String, queue_size=10)
-    rospy.init_node('send_comm', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
-    while not rospy.is_shutdown():
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-        if ch == 'w':
-            message="fwd"
-        if ch =='s':
-            message="back"
-        if ch == 'a':
-            message="left"
-        if ch == 'd':
-            message="right"
-        if ch == 'x':
-            raise rospy.ROSInterruptException
-        rospy.loginfo(message)
-        pub.publish(message)
-        rate.sleep()
+    try:
+        pub = rospy.Publisher('commands', String, queue_size=10)
+        rospy.init_node('send_comm', anonymous=True)
+        rate = rospy.Rate(10) # 10hz
+        while not rospy.is_shutdown():
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+            if ch == 'w':
+                message="fwd"
+            elif ch =='s':
+                message="back"
+            elif ch == 'a':
+                message="left"
+            elif ch == 'd':
+                message="right"
+            else:
+                raise rospy.ROSInterruptException
+            rospy.loginfo(message)
+            pub.publish(message)
+            rate.sleep()
+    except KeyboardInterrupt:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        sys.exit()
 
 if __name__ == '__main__':
     fd = sys.stdin.fileno()
