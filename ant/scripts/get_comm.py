@@ -38,21 +38,21 @@
 ## to the 'commands' topic
 
 import rospy, time
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 from std_msgs.msg import String
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(18,GPIO.OUT)
+#GPIO.setmode(GPIO.BCM)
+#GPIO.setwarnings(False)
+#GPIO.setup(18,GPIO.OUT)
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
-    if data.data == "fwd":
-        GPIO.output(18,GPIO.HIGH)
-    if data.data == "back":
-        GPIO.output(18,GPIO.LOW)
-
-
+    
+    #led
+    #if data.data == "fwd":
+    #    GPIO.output(18,GPIO.HIGH)
+    #if data.data == "back":
+    #    GPIO.output(18,GPIO.LOW)
     #parse(data.data)
     #execute(commands)
 
@@ -70,3 +70,4 @@ def listener():
 
 if __name__ == '__main__':
     listener()
+    #GPIO.cleanup()
