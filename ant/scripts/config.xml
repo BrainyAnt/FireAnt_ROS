@@ -1,0 +1,28 @@
+<user>
+    <name>example@example.com</name>
+    <password>unsecurepasswd</password>
+</user>
+<network>
+    <name>network_SSID</name>
+    <password>network_PASS</password>
+</network>
+<robot>
+    <robot_name>azorel</robot_name>
+    <pin_config>
+        <out>
+            <motor index='1'>
+                <in1>16</in1>
+                <in2>18</in2>
+                <pwm>12</pwm>
+            </motor>
+            <motor index='2'>
+                <in1>29</in1>
+                <in2>31</in2>
+                <pwm>35</pwm>
+            </motor>
+            <stand_by>38</stand_by>
+        </out>
+        <in>
+        </in>
+    </pin_config>
+</robot>

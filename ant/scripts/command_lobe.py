@@ -7,16 +7,19 @@ import rospy
 from std_msgs.msg import String
 
 CONFIG = {
-    "apiKey": "apiKey",
+    "apiKey": "AIzaSyDC23ZxJ7YjwVfM0BQ2o6zAtWinFrxCrcI",
     "authDomain": "brainyant-2e30d.firebaseapp.com",
     "databaseURL": "https://brainyant-2e30d.firebaseio.com/",
-    "storageBucket": "gs://brainyant-2e30d.appspot.com/",
-    "serviceAccount": "./brainyant-a3fa8afc4ec3.json"
+    "storageBucket": "gs://brainyant-2e30d.appspot.com/"
 }
+
+email = 'example@example.com'
+password = 'unsecurepasswd'
 
 FIREBASE = pyrebase.initialize_app(CONFIG)
 AUTH = FIREBASE.auth()
 DB = FIREBASE.database()
+user = AUTH.sign_in_with_email_and_password(email, password)
 
 def getch():
     fd = sys.stdin.fileno()
@@ -34,7 +37,7 @@ if __name__ == "__main__":
     right = 0
     left = 0
     print("GO:")
-    input = raw_input(">>>")
+    input = getch()
     while not input == KeyboardInterrupt:
         print(input)
-        input = raw_input(">>>")
+        input = getch()

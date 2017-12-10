@@ -1,10 +1,14 @@
-#!/usr/bin python
+#!/usr/bin/env python
 
 import collections
 #import time
+#import xml.etree.ElementTree as ET
 import rospy
 from std_msgs.msg import String
 import RPi.GPIO as GPIO
+
+#tree = ET.parse('config.xml')
+#root = tree.getroot()
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -12,8 +16,8 @@ GPIO.setwarnings(False)
 #define control pins
 STAND_BY = 38
 MOTORS = collections.namedtuple('motor', 'pwm_pin speed in1 in2')
-LEFT_MOTOR = MOTORS(12, 16, 18)
-RIGHT_MOTOR = MOTORS(35, 29, 31)
+LEFT_MOTOR = MOTORS(12, GPIO.PWM(12, 100), 16, 18)
+RIGHT_MOTOR = MOTORS(35, GPIO.PWM(35, 100), 29, 31)
 
 def motor_setup():
     GPIO.setup(STAND_BY, GPIO.OUT)
@@ -29,22 +33,26 @@ def motor_setup():
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
     try:
-        back = int(data.data.split("u'")[0].split(":")[1].split(" ")[1].split(",")[0])
+        #back = int(data.data.split("u'")[0].split(":")[1].split(" ")[1].split(",")[0])
+        back = data.data['back']
     except ValueError:
         back = 0
         print("TYPE ERROR: back!")
     try:
-        fwd = int(data.data.split("u'")[1].split(":")[1].split(" ")[1].split(",")[0])
+        #fwd = int(data.data.split("u'")[1].split(":")[1].split(" ")[1].split(",")[0])
+        fwd = data.data['fwd']
     except ValueError:
         fwd = 0
         print("TYPE ERROR: fwd!")
     try:
-        left = int(data.data.split("u'")[2].split(":")[1].split(" ")[1].split(",")[0])
+        #left = int(data.data.split("u'")[2].split(":")[1].split(" ")[1].split(",")[0])
+        left = data.data['left']
     except ValueError:
         left = 0
         print("TYPE ERROR: left!")
     try:
-        right = int(data.data.split("u'")[3].split(":")[1].split(" ")[1].split(",")[0])
+        #right = int(data.data.split("u'")[3].split(":")[1].split(" ")[1].split(",")[0])
+        right = data.data['right']
     except ValueError:
         right = 0
         print("TYPE ERROR: right!")
