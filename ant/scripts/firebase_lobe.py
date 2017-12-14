@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 
+import xml.etree.ElementTree as ET
 import pyrebase
 import rospy
 from std_msgs.msg import String
+
+tree = ET.parse('config.xml')
+root = tree.getroot()
+
+#owner ID 
+#robot ID
+#accesskey
+#get TOKEN from POST on SERVER
 
 ROBOT_NAME = 'azorel'
 CONFIG = {
@@ -20,12 +29,12 @@ PASSWORD = 'unsecurepasswd'
 USER = AUTH.sign_in_with_email_and_password(EMAIL, PASSWORD)
 DB = FIREBASE.database()
 
-#token = AUTH.create_custom_token("custom_id", {"premium_account": True})
-#user = AUTH.sign_in_with_custom_token(token)
-
-OID = 'qYLfxyR6LCMl5czODhiaOc3y18H2'
-RID = '-L-lc4aaO3M17o6SiQhp'
+OID = root[0][0].text
+RID = root[0][1].text
 UID = OID #USER['localId']
+
+#token = get token from POST on SERVER
+#user = AUTH.sign_in_with_custom_token(token)
 
 MOTION_PUB = rospy.Publisher('motion', String, queue_size=5)
 
@@ -33,13 +42,13 @@ def motion_topic_streamer():
     """Listen for changes in firebase ControlData"""
     rospy.init_node('firebase_lobe', anonymous=True)
     rate = rospy.Rate(10) #10Hz
-    motion_stream = DB.child("users").child(OID).child("robots").child(RID).child(UID).child("ControlData").order_by_key().stream(stream_handler, None)
+    motion_stream = DB.child("users").child(OID).child("robots").child(RID).child('users').child(UID).child("ControlData").order_by_key().stream(stream_handler, None)
     rate.sleep()
     motion_stream.close()
 
 def get_control_data():
     """Return ControlData values from firebase"""
-    control_data = DB.child("users").child(OID).child("robots").child(RID).child(OID).child("ControlData").order_by_key().get()
+    control_data = DB.child("users").child(OID).child("robots").child(RID).child('users').child(UID).child("ControlData").order_by_key().get()
     return control_data
 
 def stream_handler(message):
@@ -84,6 +93,7 @@ if __name__ == '__main__':
         print(robot.key())
     '''
 
+    #set recurring algorithm. 3 second interval.
     robot_set_online()
     
     print("User", UID)
