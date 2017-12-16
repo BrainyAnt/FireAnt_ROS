@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import sys
 import sched
 from multiprocessing import Process
-import calendar
 import time
 import xml.etree.ElementTree as ET
 import json
@@ -150,8 +148,11 @@ def set_robotOn(entry):
 
 def set_startControl(entry):
     """Record timestamp when control session starts"""
-    timestamp = calendar.timegm(time.gmtime())
+    timestamp = int(round(time.time()*1000)) #calendar.timegm(time.gmtime())
     DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"startControl": timestamp}, token=IDTOKEN)
+
+def get_startControl(entry):
+    return DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).child('startControl').get(token=IDTOKEN).val()
 
 def get_first_user():
     """Get first user information"""
@@ -172,6 +173,17 @@ def get_useron():
     for i in aux.each():
         useron = i.val()['userOn']
     return useron
+
+def log_session():
+    log_timestamp = int(round(time.time()*1000)) #queue_archive entry: timestamp
+    log_data = {
+        log_timestamp: {
+            'uid': UID, #uid 
+            'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
+            'waitTime': get_startControl(USER_ENTRY) - int(USER_ENTRY) #waitTime
+        }
+    }
+    DB.child('users').child(OID).child('robots').child(RID).child('queueArchive').update(log_data, token=IDTOKEN)
 
 if __name__ == '__main__':
 
@@ -223,12 +235,17 @@ if __name__ == '__main__':
         print("{}: {}".format(item.key(), item.val()))
 
     try:
-        while not rospy.is_shutdown():
+        while USERON and not rospy.is_shutdown():
             motion_topic_streamer(OID)
+            USERON = get_useron()
     except rospy.ROSInterruptException:
         print("ERROR: ROS Interrupted")
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
-
+#end of session
+    if not USERON:
+        print('Session ended.')
+#log session
+    log_session()
 #cleanup
 p1.join()
