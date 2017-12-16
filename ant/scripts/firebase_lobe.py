@@ -48,7 +48,7 @@ FIREBASE_CONFIG = {
     "authDomain": "brainyant-2e30d.firebaseapp.com",
     "databaseURL": "https://brainyant-2e30d.firebaseio.com/",
     "storageBucket": "gs://brainyant-2e30d.appspot.com/",
-    "serviceAccount": "./brainyant-a3fa8afc4ec3.json"
+    #"serviceAccount": "./brainyant-a3fa8afc4ec3.json"
 }
 
 FIREBASE = pyrebase.initialize_app(FIREBASE_CONFIG)
@@ -60,7 +60,7 @@ GET_TOKEN_DATA = {
     'robotID': RID,
     'accessKey': ACCESSKEY
 }
-'''
+
 try:
     REQUEST = urllib2.Request('https://robots.brainyant.com:8080/robotLogin')
     REQUEST.add_header('Content-Type', 'application/json')
@@ -72,12 +72,16 @@ except TokenRequestExrror:
     print('Error! Could not retreive signin token from server. Server might be down.')
 
 try:
+    USERID = None
     USER = AUTH.sign_in_with_custom_token(TOKEN)
-    if USER is None:
+    REFRESH = AUTH.refresh(USER['refreshToken'])
+    USERID = REFRESH['userId']
+    IDTOKEN = REFRESH['idToken']
+    if USERID is None:
         raise InvalidTokenException
 except InvalidTokenException:
     print('Can not sign in to firebase. Invalid token.')
-'''
+
 # ROS publisher
 MOTION_PUB = rospy.Publisher('motion', String, queue_size=5)
 
@@ -85,7 +89,7 @@ def motion_topic_streamer(userid):
     """Listen for changes in firebase ControlData"""
     rospy.init_node('firebase_lobe', anonymous=True)
     rate = rospy.Rate(10) #10Hz
-    motion_stream = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().stream(motion_stream_handler, None)
+    motion_stream = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().stream(motion_stream_handler, IDTOKEN, None)
     rate.sleep()
     motion_stream.close()
 
@@ -106,51 +110,52 @@ def queue_stream_handler(message):
 # DB set and get functions
 def get_control_data(userid):
     """Return ControlData values from firebase"""
-    control_data = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().get()
+    control_data = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().get(token=IDTOKEN)
     return control_data
 
 def start_reset_online_every_n_secs(n):
-    s = sched.scheduler(time.time, time.sleep) 
-    s.enter(n, 1, set_online, (s,n))
+    """Start a recurring function that resets the robot as online every n seconds"""
+    s = sched.scheduler(time.time, time.sleep)
+    s.enter(n, 1, set_online, (s, n))
     s.run()
 
-def set_online(s,n):
+def set_online(s, n):
     """Set field value of isOnline to True every n seconds"""
-    global COUNTER
-    COUNTER += 1
-    DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': COUNTER})
+    #global COUNTER
+    #COUNTER += 1
+    DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': True}, token=IDTOKEN)
     s.enter(n, 1, set_online, (s,n))
 
 def set_offline():
     """Set field value of isOnline to False"""
-    DB.child('users').child(OID).child('robots').child(RID).child('profile').child('isOnline').set(False)
+    DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': False}, token=IDTOKEN)
 
 def is_online():
     """Return field value of isOnline"""
-    return DB.child('users').child(OID).child('robots').child(RID).child('profile').child('isOnline').get().val()
+    return DB.child('users').child(OID).child('robots').child(RID).child('profile').child('isOnline').get(token=IDTOKEN).val()
 
 def get_name():
     """Return robot name field value"""
-    name = DB.child('users').child(OID).child('robots').child(RID).child('profile').child('name').get().val()
+    name = DB.child('users').child(OID).child('robots').child(RID).child('profile').child('name').get(token=IDTOKEN).val()
     return name
 
 def get_description():
     """Return robot description field value"""
-    description = DB.child('users').child(OID).child('robots').child(RID).child('profile').child('description').get().val()
+    description = DB.child('users').child(OID).child('robots').child(RID).child('profile').child('description').get(token=IDTOKEN).val()
     return description
 
 def set_robotOn(entry):
     """Set robotOn flag to True"""
-    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"robotOn": True})
+    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"robotOn": True}, token=IDTOKEN)
 
 def set_startControl(entry):
     """Record timestamp when control session starts"""
     timestamp = calendar.timegm(time.gmtime())
-    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"startControl": timestamp})
+    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"startControl": timestamp}, token=IDTOKEN)
 
 def get_first_user():
     """Get first user information"""
-    aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get()
+    aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get(token=IDTOKEN)
     try:
         for i in aux.each():
             uid = i.val()['userId']
@@ -163,26 +168,24 @@ def get_first_user():
 
 def get_useron():
     """Get first user status"""
-    aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get()
+    aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get(token=IDTOKEN)
     for i in aux.each():
         useron = i.val()['userOn']
     return useron
 
 if __name__ == '__main__':
+
 #read xml
 #ask for token
 #get custom token
 #sign in with custom token
+
 #set robot online (recurring)
-    global COUNTER 
-    COUNTER = 0
+    #global COUNTER 
+    #COUNTER = 0
     p1 = Process(target = start_reset_online_every_n_secs, args = [1])
     p1.start()
-    #t = threading.Timer(30, set_online)
-    #t.daemon = True
-    #t.start()
-    #set_online()
-#robot name & description    
+#robot name & description
     print(get_name())
     print(get_description())
 #wait for users
@@ -223,8 +226,9 @@ if __name__ == '__main__':
         while not rospy.is_shutdown():
             motion_topic_streamer(OID)
     except rospy.ROSInterruptException:
-        print "ERROR: ROS Interrupted"
+        print("ERROR: ROS Interrupted")
     except KeyboardInterrupt:
-        print "ERROR: Keyboard Interrupt detected!"
+        print("ERROR: Keyboard Interrupt detected!")
+
 #cleanup
 p1.join()
