@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import sched
 from multiprocessing import Process
 import time
@@ -111,18 +112,25 @@ def get_control_data(userid):
     control_data = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().get(token=IDTOKEN)
     return control_data
 
-def start_reset_online_every_n_secs(n):
-    """Start a recurring function that resets the robot as online every n seconds"""
+def start_still_alive_every_n_secs(n):
+    """Start a recurring function that signals the robot is online every n seconds"""
     s = sched.scheduler(time.time, time.sleep)
-    s.enter(n, 1, set_online, (s, n))
+    s.enter(n, 1, still_alive, (s, n))
     s.run()
 
-def set_online(s, n):
-    """Set field value of isOnline to True every n seconds"""
-    #global COUNTER
-    #COUNTER += 1
-    DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': True}, token=IDTOKEN)
-    s.enter(n, 1, set_online, (s,n))
+def still_alive(s, n):
+    """Send a signal to the server every n seconds"""
+    alive_data = {'robotID': RID}
+    iamalive = urllib2.Request('https://robots.brainyant.com:8080/iAmAlive')
+    iamalive.add_header('Content-Type', 'application/json')
+    urllib2.urlopen(iamalive, json.dumps(alive_data))
+    #DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': True}, token=IDTOKEN)
+    try:
+        if is_online():
+            s.enter(n, 1, still_alive, (s,n))
+    except KeyboardInterrupt:
+        print('Program terminated.')
+        sys.exit()
 
 def set_offline():
     """Set field value of isOnline to False"""
@@ -176,14 +184,24 @@ def get_useron():
 
 def log_session():
     log_timestamp = int(round(time.time()*1000)) #queue_archive entry: timestamp
-    log_data = {
-        log_timestamp: {
-            'uid': UID, #uid 
-            'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
-            'waitTime': get_startControl(USER_ENTRY) - int(USER_ENTRY) #waitTime
+    try:
+        log_data = {
+            log_timestamp: {
+                'uid': UID, #uid 
+                'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
+                'waitTime': get_startControl(USER_ENTRY) - int(USER_ENTRY) #waitTime
+            }
         }
-    }
+    except ValueError:
+        log_data = {
+            log_timestamp: {
+                'uid': UID, #uid 
+                'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
+                'waitTime': None #waitTime
+            }
+        }
     DB.child('users').child(OID).child('robots').child(RID).child('queueArchive').update(log_data, token=IDTOKEN)
+    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(USER_ENTRY).remove(token=IDTOKEN)
 
 if __name__ == '__main__':
 
@@ -193,9 +211,11 @@ if __name__ == '__main__':
 #sign in with custom token
 
 #set robot online (recurring)
+#robot still alive
+    #/iAmAlive/json robotId: RID
     #global COUNTER 
     #COUNTER = 0
-    p1 = Process(target = start_reset_online_every_n_secs, args = [1])
+    p1 = Process(target = start_still_alive_every_n_secs, args = [3])
     p1.start()
 #robot name & description
     print(get_name())
@@ -243,9 +263,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
 #end of session
-    if not USERON:
-        print('Session ended.')
+    print('Session ended.')
 #log session
+    print('Logging in archive')
     log_session()
 #cleanup
 p1.join()
