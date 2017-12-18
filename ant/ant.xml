@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<requirements>
+    <OS>Debian, Linux, Raspbian, Jessie, Ubuntu, I don't know man. Just something that runs ROS and/or python</OS>
+    
+    <Compiler>
+        <1>Python 2.7</1>
+    </Compiler>
+    
+    <Software>
+        <1><2>This package</1>
+        <2>ROS Kinetic</2>
+    </Software>
+    
+    <Libraries>
+        <1>Pyrebase</1>
+    </Libraries>
+    
+    <Fixes>
+        <1>Pyrebase stream close fix</1>
+        <2>python #!/usr/bin/env python fix</2>
+    </Fixes>
+    
+    <Setup>
+        <1>catkin_make</1>
+        <2>source devel/setup.bash</2>
+        <3>environment variables</3>
+    </Setup>
+
+    <Run>
+        <1>Run launch file (roslaunch)</1>
+    </Run>
+</requirements>

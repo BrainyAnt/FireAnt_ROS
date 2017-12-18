@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import sched
 from multiprocessing import Process
@@ -32,7 +33,12 @@ class UserOfflineException(Exception):
     pass
 
 # Parse .xml file
-TREE = ET.parse('firebase_config.xml')
+try:
+    DIR = os.path.dirname(__file__)
+    TREE = ET.parse(DIR+'/../config/firebase_config.xml')
+except IOError:
+    print("Config file not found!")
+    sys.exit()
 ROOT = TREE.getroot()
 
 OID = ROOT[0][0].text
