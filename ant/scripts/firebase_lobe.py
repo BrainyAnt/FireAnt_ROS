@@ -35,6 +35,7 @@ class UserOfflineException(Exception):
 # Parse .xml file
 try:
     DIR = os.path.dirname(__file__)
+    print(DIR)
     TREE = ET.parse(DIR+'/../config/firebase_config.xml')
 except IOError:
     print("Config file not found!")
@@ -188,7 +189,7 @@ def get_useron():
         useron = i.val()['userOn']
     return useron
 
-def log_session():
+def log_session(USER_ENTRY, UID, USERON):
     log_timestamp = int(round(time.time()*1000)) #queue_archive entry: timestamp
     try:
         log_data = {
@@ -209,28 +210,9 @@ def log_session():
     DB.child('users').child(OID).child('robots').child(RID).child('queueArchive').update(log_data, token=IDTOKEN)
     DB.child('users').child(OID).child('robots').child(RID).child('queue').child(USER_ENTRY).remove(token=IDTOKEN)
 
-if __name__ == '__main__':
-
-#read xml
-#ask for token
-#get custom token
-#sign in with custom token
-
-#set robot online (recurring)
-#robot still alive
-    #/iAmAlive/json robotId: RID
-    #global COUNTER 
-    #COUNTER = 0
-    p1 = Process(target = start_still_alive_every_n_secs, args = [3])
-    p1.start()
-#robot name & description
-    print(get_name())
-    print(get_description())
-#wait for users
+def wait_for_users(USER_ENTRY, UID, USERON):
     # Get UID
     print("Waiting for user ...")
-    USER_ENTRY = None
-    UID = None
     while UID is None:
         try:
             (UID, USERON, USER_ENTRY) = get_first_user()
@@ -239,7 +221,9 @@ if __name__ == '__main__':
         except EmptyQueueException:
             print("[empty queue]")
     print("Found user --> UID: {}".format(UID))
-#get userOn
+    wait_for_user_on(USER_ENTRY, UID, USERON)
+
+def wait_for_user_on(USER_ENTRY, UID, USERON):
     while not USERON:
         try:
             USERON = get_useron()
@@ -252,10 +236,10 @@ if __name__ == '__main__':
     print('Robot is on. Starting control session ...')
     set_robotOn(USER_ENTRY)
     set_startControl(USER_ENTRY)
-    
-    print('Waiting for commands ...')
-#listen for commands
-    CONTROL_DATA = get_control_data(OID)
+    listen_for_commands(USER_ENTRY, UID, USERON)
+
+def listen_for_commands(USER_ENTRY, UID, USERON):
+    CONTROL_DATA = get_control_data(UID)
     print(CONTROL_DATA.key())
     for item in CONTROL_DATA.each():
         print("{}: {}".format(item.key(), item.val()))
@@ -268,10 +252,36 @@ if __name__ == '__main__':
         print("ERROR: ROS Interrupted")
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
-#end of session
+    #end of session
     print('Session ended.')
-#log session
-    print('Logging in archive')
-    log_session()
+    #log session
+    print('Logging to archive')
+    log_session(USER_ENTRY, UID, USERON)
+
+if __name__ == '__main__':
+
+#read xml
+#ask for token
+#get custom token
+#sign in with custom token
+
+#set robot online (recurring)
+#robot still alive
+    #/iAmAlive/json robotId: RID
+    #global COUNTER 
+    #COUNTER = 0
+    p1 = Process(target = start_still_alive_every_n_secs, args = [1])
+    p1.start()
+#robot name & description
+    print(get_name())
+    print(get_description())
+
+    UID = None
+    USERON = None
+    USER_ENTRY = None
+#wait for users
+    while is_online():
+        wait_for_users(USER_ENTRY, UID, USERON)
+
 #cleanup
-p1.join()
+    p1.join()
