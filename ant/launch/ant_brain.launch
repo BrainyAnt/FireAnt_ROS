@@ -1,4 +1,4 @@
 <launch>
-  <node name="firebase_bridge" pkg="ant" type="firebase_lobe.py" respawn="true" output="screen" ns="ant_brain"/>
+  <node name="firebase_lobe" pkg="ant" type="firebase_lobe.py" respawn="true" output="screen" ns="ant_brain"/>
   <!--node name="motor_lobe" pkg="ant" type="motor_lobe" ns="ant_brain"/> -->
 </launch>
