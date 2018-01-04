@@ -1,6 +1,6 @@
-
 #!/usr/bin/env python
 
+import sys
 #import time
 #import xml.etree.ElementTree as ET
 import rospy
@@ -37,6 +37,9 @@ def turn_leds(state):
         GPIO.output(LED_PIN, GPIO.LOW)
 
 if __name__ == '__main__':
-    while not KeyboardInterrupt:
-        control_topic_listener()
+    while True:
+        try:
+            control_topic_listener()
+        except KeyboardInterrupt:
+            sys.exit()
     GPIO.cleanup()
