@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import ast
 #import time
 #import xml.etree.ElementTree as ET
 import rospy
@@ -23,9 +24,10 @@ def control_topic_listener():
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
-    print(type(data.data))
+    controlData = asta.literal_eval(data.data)
+    print(type(controlData))
     try:
-        on_off = data.data['leds']['left']
+        on_off = controlData['leds']['left']
     except ValueError:
         on_off = 0
         print("TYPE ERROR: leds.left")

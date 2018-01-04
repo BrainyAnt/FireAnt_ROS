@@ -102,8 +102,7 @@ def motion_topic_streamer(userid):
 def motion_stream_handler(message):
     """Stream handler. Publish data to topic."""
     #rospy.loginfo(message["data"])
-    print(type(message["data"]))
-    MOTION_PUB.publish(message["data"])
+    MOTION_PUB.publish(str(message["data"]))
 
 def user_queue_streamer():
     """Listen for changes in firebase user queue"""
@@ -242,7 +241,7 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
 def listen_for_commands(USER_ENTRY, UID, USERON):
     CONTROL_DATA = get_control_data(UID)
     #print(CONTROL_DATA.key())
-    for item in CONTROL_DATA.each():
+    #for item in CONTROL_DATA.each():
         #print("{}: {}".format(item.key(), item.val()))
 
     try:
