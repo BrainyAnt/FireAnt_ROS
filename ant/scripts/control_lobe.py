@@ -16,6 +16,7 @@ GPIO.setwarnings(False)
 
 LED_PIN = 17
 GPIO.setup(LED_PIN, GPIO.OUT)
+GPIO.output(LED_PIN, GPIO.LOW)
 
 def control_topic_listener():
     rospy.init_node('control_lobe', anonymous=True)
@@ -43,7 +44,6 @@ if __name__ == '__main__':
         try:
             control_topic_listener()
         except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            print("Exited with keyboard interropt!")
+            GPIO.cleanup()
+            print("Exited with keyboard interrupt!")
     GPIO.cleanup()
