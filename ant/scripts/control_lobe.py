@@ -59,6 +59,8 @@ def switch_leds(led_states):
         GPIO.output(LED_PIN, GPIO.LOW)
 
 def move(movement):
+    for i in movement:
+        print("{}: {}".format(i, movement[i]))
     if int(movement["fwd"]) == 1:
         foreward()
 
