@@ -41,6 +41,8 @@ if __name__ == '__main__':
     while True:
         try:
             control_topic_listener()
-        except KeyboardInterrupt:
-            sys.exit()
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            print("Exited with keyboard interropt!")
     GPIO.cleanup()
