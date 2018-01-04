@@ -217,11 +217,15 @@ def wait_for_users(USER_ENTRY, UID, USERON):
     print("Waiting for user ...")
     try:
         while UID is None:
-            (UID, USERON, USER_ENTRY) = get_first_user()
-            if UID is None:
-                raise EmptyQueueException
-    except EmptyQueueException:
-            print("[empty queue]")
+            try:
+                (UID, USERON, USER_ENTRY) = get_first_user()
+                if UID is None:
+                    raise EmptyQueueException
+            except EmptyQueueException:
+                print("[empty queue]")
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt!")
+        exit(0)
     print("Found user --> UID: {}".format(UID))
     wait_for_user_on(USER_ENTRY, UID, USERON)
 
