@@ -18,6 +18,19 @@ LED_PIN = 17
 GPIO.setup(LED_PIN, GPIO.OUT)
 GPIO.output(LED_PIN, GPIO.LOW)
 
+MOTOR_L_PIN_1 = 9
+MOTOR_L_PIN_2 = 10
+MOTOR_R_PIN_1 = 11
+MOTOR_R_PIN_2 = 12
+GPIO.setup(MOTOR_L_PIN_1, GPIO.OUT)
+GPIO.setup(MOTOR_L_PIN_2, GPIO.OUT)
+GPIO.setup(MOTOR_R_PIN_1, GPIO.OUT)
+GPIO.setup(MOTOR_R_PIN_2, GPIO.OUT)
+GPIO.output(MOTOR_L_PIN_1, GPIO.LOW)
+GPIO.output(MOTOR_L_PIN_2, GPIO.LOW)
+GPIO.output(MOTOR_R_PIN_1, GPIO.LOW)
+GPIO.output(MOTOR_R_PIN_2, GPIO.LOW)
+
 def control_topic_listener():
     rospy.init_node('control_lobe', anonymous=True)
     rospy.Subscriber('control', String, callback, queue_size=10)
@@ -27,17 +40,57 @@ def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
     control_data = ast.literal_eval(data.data)
     try:
-        on_off = control_data['leds']['left']
+        leds = control_data['leds']
+        movement = {
+            control_data['fwd'],
+            control_data['back'],
+            control_data['left'],
+            control_data['right']
+            }
     except ValueError:
-        on_off = 0
-        print("TYPE ERROR: leds.left")
-    switch_leds(on_off)
+        print("TYPE ERROR")
+    switch_leds(leds)
+    move(movement)
 
-def switch_leds(state):
-    if state is True:
+def switch_leds(led_states):
+    if led_states['left'] is True:
         GPIO.output(LED_PIN, GPIO.HIGH)
     else:
         GPIO.output(LED_PIN, GPIO.LOW)
+
+def move(movement):
+    if int(movement["fwd"]) == 1:
+        foreward()
+
+def stop():
+    GPIO.output(MOTOR_L_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_L_PIN_2, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_2, GPIO.LOW)
+
+def foreward():
+    GPIO.output(MOTOR_L_PIN_1, GPIO.HIGH)
+    GPIO.output(MOTOR_L_PIN_2, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_1, GPIO.HIGH)
+    GPIO.output(MOTOR_R_PIN_2, GPIO.LOW)
+
+def back():
+    GPIO.output(MOTOR_L_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_L_PIN_2, GPIO.HIGH)
+    GPIO.output(MOTOR_R_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_2, GPIO.HIGH)
+
+def left():
+    GPIO.output(MOTOR_L_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_L_PIN_2, GPIO.HIGH)
+    GPIO.output(MOTOR_R_PIN_1, GPIO.HIGH)
+    GPIO.output(MOTOR_R_PIN_2, GPIO.LOW)
+
+def right():
+    GPIO.output(MOTOR_L_PIN_1, GPIO.HIGH)
+    GPIO.output(MOTOR_L_PIN_2, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_1, GPIO.LOW)
+    GPIO.output(MOTOR_R_PIN_2, GPIO.HIGH)
 
 if __name__ == '__main__':
     try:    
