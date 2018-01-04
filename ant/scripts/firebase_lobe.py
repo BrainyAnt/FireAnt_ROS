@@ -233,11 +233,15 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
     """Wait for current user to be online"""
     try:
         while not USERON:
-            USERON = get_useron()
-            if not USERON:
-                raise UserOfflineException
-    except UserOfflineException:
-            print('[user is offline]')
+            try:
+                USERON = get_useron()
+                if not USERON:
+                    raise UserOfflineException
+            except UserOfflineException:
+                print('[user is offline]')
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt!")
+        exit(0)
     print('User is online')
 
     print('Robot is on. Starting control session ...')
@@ -267,7 +271,12 @@ if __name__ == '__main__':
     USERON = None
     USER_ENTRY = None
 #wait for users
-    while is_online():
-        wait_for_users(USER_ENTRY, UID, USERON)
+    try:
+        while is_online():
+            wait_for_users(USER_ENTRY, UID, USERON)
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt!")
+        exit(0)
+        p1.join()
 #cleanup
     p1.join()
