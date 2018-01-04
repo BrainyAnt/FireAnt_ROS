@@ -101,7 +101,8 @@ def motion_topic_streamer(userid):
 
 def motion_stream_handler(message):
     """Stream handler. Publish data to topic."""
-    rospy.loginfo(message["data"])
+    #rospy.loginfo(message["data"])
+    print(type(message["data"]))
     MOTION_PUB.publish(message["data"])
 
 def user_queue_streamer():
@@ -231,7 +232,7 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
                 raise UserOfflineException
         except UserOfflineException:
             print('[user is offline]')
-    print('User is online')
+    #print('User is online')
 
     print('Robot is on. Starting control session ...')
     set_robotOn(USER_ENTRY)
@@ -240,9 +241,9 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
 
 def listen_for_commands(USER_ENTRY, UID, USERON):
     CONTROL_DATA = get_control_data(UID)
-    print(CONTROL_DATA.key())
+    #print(CONTROL_DATA.key())
     for item in CONTROL_DATA.each():
-        print("{}: {}".format(item.key(), item.val()))
+        #print("{}: {}".format(item.key(), item.val()))
 
     try:
         while USERON and not rospy.is_shutdown():
@@ -273,8 +274,8 @@ if __name__ == '__main__':
     p1 = Process(target = start_still_alive_every_n_secs, args = [1])
     p1.start()
 #robot name & description
-    print(get_name())
-    print(get_description())
+    #print(get_name())
+    #print(get_description())
 
     UID = None
     USERON = None
