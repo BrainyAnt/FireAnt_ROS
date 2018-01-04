@@ -19,15 +19,14 @@ GPIO.setup(LED_PIN, GPIO.OUT)
 
 def control_topic_listener():
     rospy.init_node('control_lobe', anonymous=True)
-    rospy.Subscriber('motion', String, callback, queue_size=5)
+    rospy.Subscriber('control', String, callback, queue_size=10)
     rospy.spin()
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
-    controlData = asta.literal_eval(data.data)
-    print(type(controlData))
+    control_data = ast.literal_eval(data.data)
     try:
-        on_off = controlData['leds']['left']
+        on_off = control_data['leds']['left']
     except ValueError:
         on_off = 0
         print("TYPE ERROR: leds.left")

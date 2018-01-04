@@ -89,7 +89,7 @@ except InvalidTokenException:
     print('Can not sign in to firebase. Invalid token.')
 
 # ROS publisher
-MOTION_PUB = rospy.Publisher('motion', String, queue_size=5)
+MOTION_PUB = rospy.Publisher('control', String, queue_size=10)
 
 def motion_topic_streamer(userid):
     """Listen for changes in firebase ControlData"""
@@ -131,10 +131,9 @@ def still_alive(s, n):
     iamalive = urllib2.Request('https://robots.brainyant.com:8080/iAmAlive')
     iamalive.add_header('Content-Type', 'application/json')
     urllib2.urlopen(iamalive, json.dumps(alive_data))
-    #DB.child('users').child(OID).child('robots').child(RID).child('profile').update({'isOnline': True}, token=IDTOKEN)
     try:
         if is_online():
-            s.enter(n, 1, still_alive, (s,n))
+            s.enter(n, 1, still_alive, (s, n))
     except KeyboardInterrupt:
         print('Program terminated.')
         sys.exit()
@@ -167,6 +166,7 @@ def set_startControl(entry):
     DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).update({"startControl": timestamp}, token=IDTOKEN)
 
 def get_startControl(entry):
+    """Return timestamp for start of control session"""
     return DB.child('users').child(OID).child('robots').child(RID).child('queue').child(entry).child('startControl').get(token=IDTOKEN).val()
 
 def get_first_user():
@@ -190,11 +190,12 @@ def get_useron():
     return useron
 
 def log_session(USER_ENTRY, UID, USERON):
+    """Log a session to archive after it is over"""
     log_timestamp = int(round(time.time()*1000)) #queue_archive entry: timestamp
     try:
         log_data = {
             log_timestamp: {
-                'uid': UID, #uid 
+                'uid': UID, #uid
                 'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
                 'waitTime': get_startControl(USER_ENTRY) - int(USER_ENTRY) #waitTime
             }
@@ -202,7 +203,7 @@ def log_session(USER_ENTRY, UID, USERON):
     except ValueError:
         log_data = {
             log_timestamp: {
-                'uid': UID, #uid 
+                'uid': UID, #uid
                 'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
                 'waitTime': None #waitTime
             }
@@ -211,6 +212,7 @@ def log_session(USER_ENTRY, UID, USERON):
     DB.child('users').child(OID).child('robots').child(RID).child('queue').child(USER_ENTRY).remove(token=IDTOKEN)
 
 def wait_for_users(USER_ENTRY, UID, USERON):
+    """Wait for user to show up in queue"""
     # Get UID
     print("Waiting for user ...")
     while UID is None:
@@ -224,6 +226,7 @@ def wait_for_users(USER_ENTRY, UID, USERON):
     wait_for_user_on(USER_ENTRY, UID, USERON)
 
 def wait_for_user_on(USER_ENTRY, UID, USERON):
+    """Wait for current user to be online"""
     while not USERON:
         try:
             USERON = get_useron()
@@ -231,7 +234,7 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
                 raise UserOfflineException
         except UserOfflineException:
             print('[user is offline]')
-    #print('User is online')
+    print('User is online')
 
     print('Robot is on. Starting control session ...')
     set_robotOn(USER_ENTRY)
@@ -239,11 +242,8 @@ def wait_for_user_on(USER_ENTRY, UID, USERON):
     listen_for_commands(USER_ENTRY, UID, USERON)
 
 def listen_for_commands(USER_ENTRY, UID, USERON):
+    """Listen for changes in ControlData"""
     CONTROL_DATA = get_control_data(UID)
-    #print(CONTROL_DATA.key())
-    #for item in CONTROL_DATA.each():
-        #print("{}: {}".format(item.key(), item.val()))
-
     try:
         while USERON and not rospy.is_shutdown():
             motion_topic_streamer(UID)
@@ -252,36 +252,18 @@ def listen_for_commands(USER_ENTRY, UID, USERON):
         print("ERROR: ROS Interrupted")
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
-    #end of session
-    print('Session ended.')
-    #log session
-    print('Logging to archive')
+    print('Session ended.') #end of session
+    print('Logging to archive') #log session
     log_session(USER_ENTRY, UID, USERON)
 
 if __name__ == '__main__':
-
-#read xml
-#ask for token
-#get custom token
-#sign in with custom token
-
-#set robot online (recurring)
-#robot still alive
-    #/iAmAlive/json robotId: RID
-    #global COUNTER 
-    #COUNTER = 0
     p1 = Process(target = start_still_alive_every_n_secs, args = [1])
     p1.start()
-#robot name & description
-    #print(get_name())
-    #print(get_description())
-
     UID = None
     USERON = None
     USER_ENTRY = None
 #wait for users
     while is_online():
         wait_for_users(USER_ENTRY, UID, USERON)
-
 #cleanup
     p1.join()
