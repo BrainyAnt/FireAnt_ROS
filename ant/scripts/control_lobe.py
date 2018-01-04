@@ -31,19 +31,19 @@ def callback(data):
     except ValueError:
         on_off = 0
         print("TYPE ERROR: leds.left")
-    turn_leds(on_off)
+    switch_leds(on_off)
 
-def turn_leds(state):
+def switch_leds(state):
     if state is True:
         GPIO.output(LED_PIN, GPIO.HIGH)
     else:
         GPIO.output(LED_PIN, GPIO.LOW)
 
 if __name__ == '__main__':
-    while True:
-        try:
+    try:    
+        while True:
             control_topic_listener()
-        except (KeyboardInterrupt, SystemExit):
-            GPIO.cleanup()
-            print("Exited with keyboard interrupt!")
+    except (KeyboardInterrupt, SystemExit):
+        GPIO.cleanup()
+        print("Exited with keyboard interrupt!")
     GPIO.cleanup()

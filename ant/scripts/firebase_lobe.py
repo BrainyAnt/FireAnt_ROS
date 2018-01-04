@@ -215,24 +215,24 @@ def wait_for_users(USER_ENTRY, UID, USERON):
     """Wait for user to show up in queue"""
     # Get UID
     print("Waiting for user ...")
-    while UID is None:
-        try:
+    try:
+        while UID is None:
             (UID, USERON, USER_ENTRY) = get_first_user()
             if UID is None:
                 raise EmptyQueueException
-        except EmptyQueueException:
+    except EmptyQueueException:
             print("[empty queue]")
     print("Found user --> UID: {}".format(UID))
     wait_for_user_on(USER_ENTRY, UID, USERON)
 
 def wait_for_user_on(USER_ENTRY, UID, USERON):
     """Wait for current user to be online"""
-    while not USERON:
-        try:
+    try:
+        while not USERON:
             USERON = get_useron()
             if not USERON:
                 raise UserOfflineException
-        except UserOfflineException:
+    except UserOfflineException:
             print('[user is offline]')
     print('User is online')
 
