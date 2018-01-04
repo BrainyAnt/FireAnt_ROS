@@ -102,7 +102,7 @@ def motion_topic_streamer(userid):
 def motion_stream_handler(message):
     """Stream handler. Publish data to topic."""
     rospy.loginfo(message["data"])
-    MOTION_PUB.publish(str(message["data"]))
+    MOTION_PUB.publish(message["data"])
 
 def user_queue_streamer():
     """Listen for changes in firebase user queue"""

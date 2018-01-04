@@ -23,6 +23,7 @@ def control_topic_listener():
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
+    print(type(data.data))
     try:
         on_off = data.data['leds']['left']
     except ValueError:
