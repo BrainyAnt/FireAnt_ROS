@@ -174,7 +174,7 @@ def get_first_user():
     aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get(token=IDTOKEN)
     try:
         for i in aux.each():
-            uid = i.val()['userId']
+            uid = i.val()['uid']
             useron = i.val()['userOn']
             user_entry = i.key()
     except TypeError:
@@ -246,7 +246,7 @@ def listen_for_commands(USER_ENTRY, UID, USERON):
 
     try:
         while USERON and not rospy.is_shutdown():
-            motion_topic_streamer(OID)
+            motion_topic_streamer(UID)
             USERON = get_useron()
     except rospy.ROSInterruptException:
         print("ERROR: ROS Interrupted")
