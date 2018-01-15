@@ -2,6 +2,7 @@
 
 import os
 import sys
+import ast
 import sched
 from multiprocessing import Process
 import time
@@ -255,6 +256,9 @@ def listen_for_commands(USER_ENTRY, UID, USERON):
     try:
         while USERON and not rospy.is_shutdown():
             motion_topic_streamer(UID)
+            sensor_topic_listener(UID)
+            #ADD LISTEN FOR SENSOR REQUEST
+            #GET SENSOR READINGS
             USERON = get_useron()
     except rospy.ROSInterruptException:
         print("ERROR: ROS Interrupted")
@@ -263,6 +267,22 @@ def listen_for_commands(USER_ENTRY, UID, USERON):
     print('Session ended.') #end of session
     print('Logging to archive') #log session
     log_session(USER_ENTRY, UID, USERON)
+
+def update_sensor_value(userid, sense):
+    #update firebase entry
+    for sensor in sense:
+        DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").update({sensor: sense[sensor]})
+
+def sensor_topic_listener(userid):
+    rospy.init_node('sensor_lobe', anonymous=True)
+    rospy.Subscriber('sense', String, callback_sense, (userid), queue_size=10)
+    rospy.spin()
+
+def callback_sense(data, args):
+    #rospy.loginfo(rospy.get_caller_id() + data.data)
+    UID = args[0]
+    sense = ast.literal_eval(data.data)
+    update_sensor_value(UID, sense)
 
 if __name__ == '__main__':
     p1 = Process(target = start_still_alive_every_n_secs, args = [1])
@@ -276,7 +296,7 @@ if __name__ == '__main__':
             wait_for_users(USER_ENTRY, UID, USERON)
     except KeyboardInterrupt:
         print("Keyboard Interrupt!")
-        exit(0)
         p1.join()
+        exit(0)
 #cleanup
     p1.join()

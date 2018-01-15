@@ -13,7 +13,7 @@
         <stand_by>38</stand_by>
     </out>
     <in>
-        <button index='1'>1</button>
-        <distance index='1'>2</distance>
+        <button index='1'>5</button>
+        <distance index='1'>6</distance>
     </in>
 </pin_config>

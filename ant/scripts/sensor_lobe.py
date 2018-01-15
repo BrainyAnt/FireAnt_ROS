@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+import ast
 import collections
 #import time
 import xml.etree.ElementTree as ET
@@ -16,38 +18,51 @@ PIN_CONFIG = ROOT["in"]
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-# pin config
-
 #GPIO pin setup
 for item in PIN_CONFIG:
+    print({}: {}.format(item, PIN_CONFIG[item]))
     GPIO.setup(PIN_CONFIG[item] , GPIO.IN)
 
 #Subscribe to sensor request topic
     #Send sensor data to topic on request
-def sensor_request_listener():
+def control_topic_listener():
     rospy.init_node('sensor_lobe', anonymous=True)
-    rospy.Subscriber('sense_request', String, callback, queue_size=5)
+    rospy.Subscriber('control', String, callback, queue_size=10)
     rospy.spin()
 
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
-    #identify sensor
-    handle_sensors(data.data)
+    control_data = ast.literal_eval(data.data)
+    try:
+        sensors = control_data['sensors']
+    except ValueError:
+        print("TYPE ERROR")
+    handle_sensors(sensors)
 
-SENSE_PUB = rospy.Publisher('sense_reading', String, queue_size=5)
+SENSE_PUB = rospy.Publisher('sense', String, queue_size=5)
 
-def sense_reading_publish(data):
+def sensor_reading_publish(data):
     rospy.loginfo(data)
     SENSE_PUB.publish(str(data))
 
-def handle_sensors(message):
+def handle_sensors(sensors):
     data = None
-    for sensor_name in message:
-        if message[sensor_name] is True:
-            reading = read_sensor(sensor_name)
-            data.append({sensor_name: reading})
-            sense_reading_publish(data)
+    for sensor in sensors:
+        if sensors[sensor]['request'] is True:
+            reading = read_sensor(sensor)
+            data.append({sensor: {'value': reading}})
+            sensor_reading_publish(data)
 
 def read_sensor(sensor_name):
     sensor_reading = GPIO.input(PIN_CONFIG[sensor_name])
     return sensor_reading
+
+if __name__ == '__main__':
+    try:    
+        while True:
+            control_topic_listener()
+    except KeyboardInterrupt:
+        GPIO.cleanup()
+        print("Exited with keyboard interrupt!")
+        exit(0)
+    GPIO.cleanup()
