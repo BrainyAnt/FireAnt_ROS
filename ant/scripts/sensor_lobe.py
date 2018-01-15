@@ -13,15 +13,16 @@ TREE = ET.parse('pin_config.xml')
 ROOT = TREE.getroot()
 
 #get sensor pin config
-PIN_CONFIG = ROOT["in"]
+PIN_CONFIG = ROOT[1]
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 #GPIO pin setup
+SENSE_CONFIG = {}
 for item in PIN_CONFIG:
-    print({}: {}.format(item, PIN_CONFIG[item]))
-    GPIO.setup(PIN_CONFIG[item] , GPIO.IN)
+    SENSE_CONFIG[item.tag] = int(item.text)
+    GPIO.setup(SENSE_CONFIG[item.tag] , GPIO.IN)
 
 #Subscribe to sensor request topic
     #Send sensor data to topic on request
@@ -54,7 +55,7 @@ def handle_sensors(sensors):
             sensor_reading_publish(data)
 
 def read_sensor(sensor_name):
-    sensor_reading = GPIO.input(PIN_CONFIG[sensor_name])
+    sensor_reading = GPIO.input(SENSE_CONFIG[sensor_name]) #use a function specific for each sensor
     return sensor_reading
 
 if __name__ == '__main__':
