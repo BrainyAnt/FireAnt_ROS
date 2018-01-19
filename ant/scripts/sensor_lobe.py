@@ -9,7 +9,13 @@ import rospy
 from std_msgs.msg import String
 import RPi.GPIO as GPIO
 
-TREE = ET.parse('pin_config.xml')
+try:
+    DIR = os.path.dirname(os.path.realpath(__file__))
+    print(DIR)
+    TREE = ET.parse(DIR+'/pin_config.xml')
+except IOError:
+    print("Config file not found!")
+    sys.exit()
 ROOT = TREE.getroot()
 
 #get sensor pin config
