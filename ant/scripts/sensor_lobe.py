@@ -46,11 +46,11 @@ def sensor_reading_publish(data):
     SENSE_PUB.publish(str(data))
 
 def handle_sensors(sensors):
-    data = None
+    data = {}
     for sensor in sensors:
         if sensors[sensor]['request'] is True:
             reading = read_sensor(sensor)
-            data.append({sensor: {'value': reading}})
+            data{sensor} = {'value': reading}})
             sensor_reading_publish(data)
 
 def read_sensor(sensor_name):
