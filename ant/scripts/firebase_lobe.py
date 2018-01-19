@@ -107,11 +107,9 @@ def sensor_topic_listener():
     pass
 
 def callback_sense(data):
-    print("in")
     #rospy.loginfo(rospy.get_caller_id() + data.data)
     sense = ast.literal_eval(data.data)
     global UID
-    print("USER ID: {}".format(UID))
     update_sensor_value(UID, sense)
 
 def update_sensor_value(userid, sense):
@@ -190,10 +188,11 @@ def listen_for_commands(u_entry, userid, user_on):
         print("ERROR: ROS Interrupted")
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
+        sys.exit(0)
     
     print('Session ended.') #end of session
-    print('Logging to archive') #log session
     SUB.unregister()
+    print('Logging to archive') #log session
     log_session(u_entry, userid)
 
 
