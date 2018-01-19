@@ -115,7 +115,7 @@ def callback_sense(data):
 def update_sensor_value(userid, sense):
     #update firebase entry
     for sensor in sense:
-        DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").child("sensors").update({sensor: sense[sensor]}, token=IDTOKEN)
+        DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").child("sensors").child(sensor).update({"value": sense[sensor]}, token=IDTOKEN)
 
 
 def wait_for_users():
