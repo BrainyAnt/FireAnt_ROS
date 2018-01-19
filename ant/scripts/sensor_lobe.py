@@ -48,10 +48,14 @@ def sensor_reading_publish(data):
 def handle_sensors(sensors):
     data = {}
     for sensor in sensors:
-        if sensors[sensor]['request'] is True:
-            reading = read_sensor(sensor)
-            data[sensor] = {'value': reading}
-            sensor_reading_publish(data)
+        try:
+            if sensors[sensor]['request'] is True:
+                reading = read_sensor(sensor)
+                data[sensor] = {'value': reading}
+                sensor_reading_publish(data)
+        except KeyError:
+            print('Request field missing. Assume FALSE')
+            pass
 
 def read_sensor(sensor_name):
     sensor_reading = GPIO.input(SENSE_CONFIG[sensor_name]) #use a function specific for each sensor
