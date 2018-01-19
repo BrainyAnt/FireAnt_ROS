@@ -31,11 +31,6 @@ GPIO.output(MOTOR_L_PIN_2, GPIO.LOW)
 GPIO.output(MOTOR_R_PIN_1, GPIO.LOW)
 GPIO.output(MOTOR_R_PIN_2, GPIO.LOW)
 
-def control_topic_listener():
-    rospy.init_node('control_lobe', anonymous=True)
-    rospy.Subscriber('control', String, callback, queue_size=10)
-    rospy.spin()
-
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
     control_data = ast.literal_eval(data.data)
@@ -95,9 +90,11 @@ def right():
     GPIO.output(MOTOR_R_PIN_2, GPIO.HIGH)
 
 if __name__ == '__main__':
-    try:    
-        while True:
-            control_topic_listener()
+    try:
+        rospy.init_node('control_lobe', anonymous=True)
+        sub = rospy.Subscriber('control', String, callback, queue_size=10)
+        while not rospy.is_shutdown():
+            pass
     except KeyboardInterrupt:
         GPIO.cleanup()
         print("Exited with keyboard interrupt!")

@@ -24,13 +24,6 @@ for item in PIN_CONFIG:
     SENSE_CONFIG[item.tag] = int(item.text)
     GPIO.setup(SENSE_CONFIG[item.tag] , GPIO.IN)
 
-#Subscribe to sensor request topic
-    #Send sensor data to topic on request
-def control_topic_listener():
-    rospy.init_node('sensor_lobe', anonymous=True)
-    rospy.Subscriber('control', String, callback, queue_size=10)
-    rospy.spin()
-
 def callback(data):
     rospy.loginfo(rospy.get_caller_id() + data.data)
     control_data = ast.literal_eval(data.data)
@@ -40,10 +33,9 @@ def callback(data):
         print("TYPE ERROR")
     handle_sensors(sensors)
 
-SENSE_PUB = rospy.Publisher('sense', String, queue_size=5)
-
 def sensor_reading_publish(data):
     rospy.loginfo(data)
+    global SENSE_PUB
     SENSE_PUB.publish(str(data))
 
 def handle_sensors(sensors):
@@ -59,9 +51,12 @@ def read_sensor(sensor_name):
     return sensor_reading
 
 if __name__ == '__main__':
-    try:    
-        while True:
-            control_topic_listener()
+    try:
+        rospy.init_node('sensor_lobe', anonymous=True)
+        sub = rospy.Subscriber('control', String, callback, queue_size=10)
+        SENSE_PUB = rospy.Publisher('sense', String, queue_size=5)
+        while not rospy.is_shutdown():
+            pass
     except KeyboardInterrupt:
         GPIO.cleanup()
         print("Exited with keyboard interrupt!")
