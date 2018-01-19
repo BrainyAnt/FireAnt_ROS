@@ -89,15 +89,6 @@ except InvalidTokenException:
 MOTION_PUB = None #rospy.Publisher('control', String, queue_size=10)
 RATE = None
 
-def init_talker():
-    global MOTION_PUB
-    MOTION_PUB = rospy.Publisher('control', String, queue_size=10)
-    rospy.init_node('firebase_lobe', anonymous=True)
-    global RATE
-    RATE = rospy.Rate(10) # 10hz
-    talk_thread = Process(target = motion_topic_streamer, args = [UID])
-    return talk_thread
-
 def motion_topic_streamer(userid):
     """Listen for changes in firebase ControlData"""
     motion_stream = DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").order_by_key().stream(motion_stream_handler, IDTOKEN, None)
@@ -108,26 +99,19 @@ def motion_topic_streamer(userid):
 def motion_stream_handler(message):
     """Stream handler. Publish data to topic."""
     #rospy.loginfo(message["data"])
-    print("STREAMING................................")
     global MOTION_PUB
     MOTION_PUB.publish(str(message["data"]))
-
-# Sensor listener
-
-def init_listener():
-    global SUB
-    SUB = rospy.Subscriber('sense', String, callback_sense, queue_size=10)
-    listen_thread = Process(target = sensor_topic_listener)
-    return listen_thread
 
 def sensor_topic_listener():
     #rospy.spin()
     pass
 
 def callback_sense(data):
+    print("in")
     #rospy.loginfo(rospy.get_caller_id() + data.data)
     sense = ast.literal_eval(data.data)
     global UID
+    print("USER ID: {}".format(UID))
     update_sensor_value(UID, sense)
 
 def update_sensor_value(userid, sense):
@@ -136,35 +120,25 @@ def update_sensor_value(userid, sense):
         DB.child('users').child(OID).child('robots').child(RID).child('users').child(userid).child("ControlData").child("sensor").update({sensor: sense[sensor]}, token=IDTOKEN)
 
 
-# DB user queue
-def user_queue_streamer():
-    """Listen for changes in firebase user queue"""
-    queue_stream = DB.child('users').child(OID).child('robots').child(RID).child('queue').stream(queue_stream_handler, None)
-    queue_stream.close()
-
-def queue_stream_handler(message):
-    """Queue stream handler. Get first user in queue"""
-    print("[QUEUE_CHANGES]: {}".format(message["data"]))
-
-
-
-def wait_for_users(u_entry, userid, uon):
+def wait_for_users():
     """Wait for user to show up in queue"""
     # Get UID
-    print("Waiting for user ...")
     try:
+        print("Waiting for user ...")
+        u_entry = None
+        userid = None
+        uon = None
         while userid is None:
             try:
                 (userid, uon, u_entry) = get_first_user()
                 if userid is None:
                     raise EmptyQueueException
             except EmptyQueueException:
-                #print("[empty queue]")
                 sys.stdout.write("[empty queue]\r")
                 sys.stdout.flush()
     except KeyboardInterrupt:
         print("INTERRUPT!")
-        exit(0)
+        sys.exit(0)
     print("Found user --> UID: {}".format(userid))
     global UID
     UID = userid
@@ -210,34 +184,29 @@ def listen_for_commands(u_entry, userid, user_on):
 
         while user_on and not rospy.is_shutdown():
             motion_topic_streamer(userid)
-            #talker = init_talker()
-            #talker.start()
-            #talker.join()
-            #sensor_topic_listener()
-            #listener = init_listener()
-            #listener.start()
-            #listener.join()
+            #rospy.spin()
             user_on = get_useron()
     except rospy.ROSInterruptException:
         print("ERROR: ROS Interrupted")
-        talker.join()
-        listener.join()
     except KeyboardInterrupt:
         print("ERROR: Keyboard Interrupt detected!")
-        talker.join()
-        listener.join()
     
     print('Session ended.') #end of session
     print('Logging to archive') #log session
+    SUB.unregister()
     log_session(u_entry, userid)
 
 
 # DB still alive
 def start_still_alive_every_n_secs(n):
     """Start a recurring function that signals the robot is online every n seconds"""
-    s = sched.scheduler(time.time, time.sleep)
-    s.enter(n, 1, still_alive, (s, n))
-    s.run()
+    try:
+        s = sched.scheduler(time.time, time.sleep)
+        s.enter(n, 1, still_alive, (s, n))
+        s.run()
+    except KeyboardInterrupt:
+        print('Killed!')
+        sys.exit(0)
 
 def still_alive(s, n):
     """Send a signal to the server every n seconds"""
@@ -250,7 +219,7 @@ def still_alive(s, n):
             s.enter(n, 1, still_alive, (s, n))
     except KeyboardInterrupt:
         print('Program terminated.')
-        sys.exit()
+        sys.exit(0)
 
 # DB set and get functions
 def get_control_data(userid):
@@ -298,16 +267,22 @@ def get_first_user():
             useron = i.val()['userOn']
             user_entry = i.key()
     except TypeError:
-        #print("[empty queue"))
         return (None, None, None)
     return (uid, useron, user_entry)
 
 def get_useron():
     """Get first user status"""
-    aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get(token=IDTOKEN)
-    for i in aux.each():
-        useron = i.val()['userOn']
-    return useron
+    try:
+        aux = DB.child('users').child(OID).child('robots').child(RID).child('queue').order_by_key().limit_to_first(1).get(token=IDTOKEN)
+        for i in aux.each():
+            useron = i.val()['userOn']
+        return useron
+    except TypeError:
+        sys.stdout.write("[les empty queue]\r")
+        sys.stdout.flush()
+    except KeyboardInterrupt:
+        print("KICKED OUT")
+        exit(0)
 
 # DB log session
 def log_session(u_entry, userID):
@@ -324,13 +299,13 @@ def log_session(u_entry, userID):
     except ValueError:
         log_data = {
             log_timestamp: {
-                'uid': UID, #uid
-                'useTime': log_timestamp - get_startControl(USER_ENTRY), #useTime
+                'uid': userID, #uid
+                'useTime': log_timestamp - get_startControl(u_entry), #useTime
                 'waitTime': None #waitTime
             }
         }
     DB.child('users').child(OID).child('robots').child(RID).child('queueArchive').update(log_data, token=IDTOKEN)
-    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(USER_ENTRY).remove(token=IDTOKEN)
+    DB.child('users').child(OID).child('robots').child(RID).child('queue').child(u_entry).remove(token=IDTOKEN)
 
 if __name__ == '__main__':
     p1 = Process(target = start_still_alive_every_n_secs, args = [1])
@@ -341,15 +316,13 @@ if __name__ == '__main__':
     RATE = None
 
     UID = None
-    USERON = None
-    USER_ENTRY = None
 #wait for users
     try:
         while is_online():
-            wait_for_users(USER_ENTRY, UID, USERON)
+            wait_for_users()
     except KeyboardInterrupt:
         print("Keyboard Interrupt!")
         p1.join()
-        exit(0)
+        sys.exit(0)
 #cleanup
     p1.join()
