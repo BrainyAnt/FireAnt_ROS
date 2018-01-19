@@ -37,10 +37,10 @@ def callback(data):
     try:
         leds = control_data['leds']
         movement = {
-            "fwd": control_data['fwd'],
-            "back": control_data['back'],
-            "left": control_data['left'],
-            "right": control_data['right']
+            "fwd": control_data['movement']['fwd'],
+            "back": control_data['movement']['back'],
+            "left": control_data['movement']['left'],
+            "right": control_data['movement']['right']
             }
     except ValueError:
         print("TYPE ERROR")
