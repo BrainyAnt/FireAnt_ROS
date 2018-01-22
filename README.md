@@ -1,4 +1,5 @@
-# FireAnt ROS - package for BrainyAnt database communication
+# FireAnt
+ROS - package for BrainyAnt database communication
 
 # Description
 FireAnt is a ROS package written in python that allows control of a Raspberry Pi device through the www.brainyant.com platform.
@@ -17,16 +18,13 @@ FireAnt is a ROS package written in python that allows control of a Raspberry Pi
     sudo apt-get install ros-kinetic-ros-base
   
   Install Pyrebase
-    - Install pip if not installed:
-      sudo apt-get install python-pip
-    - Get pyrebase:
-      pip install pyrebase
-    - Apply fix for python 2.7
-      https://gist.github.com/codeAshu/f6384203706e989b0d38db6e0a9d11e7
+    - Install pip if not installed: sudo apt-get install python-pip
+    - Get pyrebase: pip install pyrebase
+    - Apply fix for python 2.7: https://gist.github.com/codeAshu/f6384203706e989b0d38db6e0a9d11e7
   
   Get FireAnt package
     - git clone
-  
+    
   Build package
     - catkin_make --pkg ant
 
