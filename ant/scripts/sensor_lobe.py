@@ -32,7 +32,7 @@ for item in PIN_CONFIG:
     GPIO.setup(SENSE_CONFIG[item.tag] , GPIO.IN)
 
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + data.data)
+    #rospy.loginfo(rospy.get_caller_id() + data.data)
     control_data = ast.literal_eval(data.data)
     try:
         sensors = control_data['sensors']
