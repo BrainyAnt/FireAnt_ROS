@@ -1,0 +1,5 @@
+<launch>
+  <node name="firebase_lobe" pkg="fireant_ros" type="firebase_lobe.py" respawn="true" output="screen" ns="fireant_ros"/>
+  <node name="control_lobe" pkg="fireant_ros" type="control_lobe.py" respawn="true" output="screen" ns="fireant_ros"/>
+  <node name="sensor_lobe" pkg="fireant_ros" type="sensor_lobe.py" respawn="true" output="screen" ns="fireant_ros"/>
+</launch>

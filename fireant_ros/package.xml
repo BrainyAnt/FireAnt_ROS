@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ant</name>
-  <version>0.0.0</version>
-  <description>The ant package. BrainyAnt custom robot control package. Designated codename: The Ant.</description>
+  <name>fireant_ros</name>
+  <version>0.0.2</version>
+  <description>The fireant_ros package. BrainyAnt custom robot control package. Designated codename: FireAnt.</description>
 
   <maintainer email="andrei.brumboiu@brainyant.eu">Andrei Brumboiu</maintainer>
 

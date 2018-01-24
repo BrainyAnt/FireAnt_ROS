@@ -36,16 +36,14 @@ class UserOfflineException(Exception):
 # Parse .xml file
 try:
     DIR = os.path.dirname(os.path.realpath(__file__))
-    print(DIR)
-    TREE = ET.parse(DIR+'/../config/firebase_config.xml')
+    AUTH_DATA = json.load(open(DIR+'/config/auth.json'))
 except IOError:
     print("Config file not found!")
-    sys.exit()
-ROOT = TREE.getroot()
+    sys.exit(2)
 
-OID = ROOT[0][0].text
-RID = ROOT[0][1].text
-ACCESSKEY = ROOT[0][2].text
+OID = AUTH_DATA['ownerID']
+RID = AUTH_DATA['robotID']
+ACCESSKEY = AUTH_DATA['accessKey']
 
 FIREBASE_CONFIG = {
     "apiKey": "AIzaSyDC23ZxJ7YjwVfM0BQ2o6zAtWinFrxCrcI",
