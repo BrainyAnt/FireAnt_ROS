@@ -36,7 +36,8 @@ class UserOfflineException(Exception):
 # Parse .xml file
 try:
     DIR = os.path.dirname(os.path.realpath(__file__))
-    AUTH_DATA = json.load(open(DIR+'/config/auth.json'))
+    print(DIR)
+    AUTH_DATA = json.load(open(DIR + '/../config/auth.json'))
 except IOError:
     print("Config file not found!")
     sys.exit(2)
